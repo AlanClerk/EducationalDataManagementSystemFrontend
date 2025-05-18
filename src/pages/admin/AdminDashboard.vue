@@ -17,6 +17,17 @@
       <input type="file" ref="fileInput" style="display: none;" accept=".xlsx,.xls" @change="handleFileUpload" />
     </div>
 
+    <!-- 搜索表单 -->
+    <div class="search-form">
+      <label>学号/工号：<input v-model="search.uid" placeholder="请输入学号/工号" /></label>
+      <label>用户名：<input v-model="search.username" placeholder="请输入用户名" /></label>
+      <label>昵称：<input v-model="search.nickname" placeholder="请输入昵称" /></label>
+      <div class="search-actions">
+        <button @click="searchUsers">搜索</button>
+        <button @click="resetSearch">重置</button>
+      </div>
+    </div>
+
     <table>
       <thead>
       <tr>
@@ -33,7 +44,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="user in userList" :key="user.id">
+      <tr v-for="user in filteredUsers" :key="user.id">
         <td>{{ user.uid }}</td>
         <td>{{ user.username }}</td>
         <td>{{ user.password }}</td>
@@ -84,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -103,6 +114,28 @@ const form = ref({
   email: '',
   department: '',
   role: ''
+})
+// 搜索条件
+const search = ref({
+  uid: '',
+  username: '',
+  nickname: ''
+})
+
+// 计算属性：根据搜索条件过滤用户列表
+const filteredUsers = computed(() => {
+  return userList.value.filter(user => {
+    const uidMatch = search.value.uid
+        ? user.uid.toString().toLowerCase().includes(search.value.uid.toLowerCase())
+        : true
+    const usernameMatch = search.value.username
+        ? user.username.toLowerCase().includes(search.value.username.toLowerCase())
+        : true
+    const nicknameMatch = search.value.nickname
+        ? user.nickname.toLowerCase().includes(search.value.nickname.toLowerCase())
+        : true
+    return uidMatch && usernameMatch && nicknameMatch
+  })
 })
 
 const fetchUsers = async () => {
@@ -204,7 +237,6 @@ const handleFileUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // 验证文件格式
   const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
   if (!validTypes.includes(file.type)) {
     alert('请上传有效的 Excel 文件（.xlsx 或 .xls）')
@@ -212,7 +244,6 @@ const handleFileUpload = async (event) => {
     return
   }
 
-  // 限制文件大小（例如 10MB）
   const maxSize = 10 * 1024 * 1024 // 10MB
   if (file.size > maxSize) {
     alert('文件大小超过 10MB，请选择更小的文件')
@@ -222,7 +253,7 @@ const handleFileUpload = async (event) => {
 
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('updateSupport', 'true') // 根据后端接口，传递 updateSupport 参数
+  formData.append('updateSupport', 'true')
 
   try {
     const res = await axios.post('/edu/admin/users/importData', formData, {
@@ -230,15 +261,25 @@ const handleFileUpload = async (event) => {
     })
     if (res.data.code === 200) {
       alert('批量导入成功')
-      await fetchUsers() // 刷新用户列表
+      await fetchUsers()
     } else {
       alert('导入失败：' + res.data.message)
     }
   } catch (error) {
     alert('导入失败：' + error.message)
   } finally {
-    event.target.value = '' // 清空文件输入框
+    event.target.value = ''
   }
+}
+
+const searchUsers = () => {
+  // 触发 computed 属性自动过滤，无需额外逻辑
+}
+
+const resetSearch = () => {
+  search.value.uid = ''
+  search.value.username = ''
+  search.value.nickname = ''
 }
 
 const goToBook = () => router.push('/BookInfo')
@@ -302,6 +343,70 @@ h1 {
 
 .action-buttons button:hover {
   background-color: #85ce61;
+}
+
+/* 搜索表单样式 */
+.search-form {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: #666;
+}
+
+.search-form input {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  width: 180px;
+}
+
+.search-form input:focus {
+  border-color: #409eff;
+}
+
+.search-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.search-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.search-actions button:first-child {
+  background-color: #409eff;
+  color: white;
+}
+
+.search-actions button:first-child:hover {
+  background-color: #66b1ff;
+}
+
+.search-actions button:last-child {
+  background-color: #909399;
+  color: white;
+}
+
+.search-actions button:last-child:hover {
+  background-color: #a6a9ad;
 }
 
 table {
