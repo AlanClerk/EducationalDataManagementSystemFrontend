@@ -1,3 +1,4 @@
+```vue
 <template>
   <div class="admin-dashboard">
     <header>
@@ -13,6 +14,8 @@
       <button @click="downloadTemplate">下载模板</button>
       <button @click="downloadGuide">填写须知</button>
       <button @click="exportUsers">导出用户列表</button>
+      <button @click="$refs.fileInput.click()">批量导入</button>
+      <input type="file" ref="fileInput" style="display: none;" accept=".xlsx,.xls" @change="handleFileUpload" />
     </div>
 
     <table>
@@ -104,9 +107,15 @@ const form = ref({
 })
 
 const fetchUsers = async () => {
-  const res = await axios.get('/edu/admin/users/list')
-  if (res.data.code === 200) {
-    userList.value = res.data.rows
+  try {
+    const res = await axios.get('/edu/admin/users/list')
+    if (res.data.code === 200) {
+      userList.value = res.data.rows
+    } else {
+      alert('获取用户列表失败：' + res.data.message)
+    }
+  } catch (error) {
+    alert('获取用户列表失败：' + error.message)
   }
 }
 
@@ -126,45 +135,111 @@ const handleEdit = (row) => {
 }
 
 const submitForm = async () => {
-  if (isEdit.value) {
-    await axios.put('/edu/admin/users', form.value)
-  } else {
-    await axios.post('/edu/admin/users', form.value)
+  try {
+    if (isEdit.value) {
+      await axios.put('/edu/admin/users', form.value)
+    } else {
+      await axios.post('/edu/admin/users', form.value)
+    }
+    dialogVisible.value = false
+    await fetchUsers()
+    alert('操作成功')
+  } catch (error) {
+    alert('操作失败：' + error.message)
   }
-  dialogVisible.value = false
-  await fetchUsers()
 }
 
 const handleDelete = async (id) => {
-  await axios.delete(`/edu/admin/users/${id}`)
-  await fetchUsers()
+  try {
+    await axios.delete(`/edu/admin/users/${id}`)
+    await fetchUsers()
+    alert('删除成功')
+  } catch (error) {
+    alert('删除失败：' + error.message)
+  }
 }
 
 const exportUsers = async () => {
-  const res = await axios.post('/edu/admin/users/export', {}, { responseType: 'blob' })
-  const url = URL.createObjectURL(res.data)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = '用户列表.xlsx'
-  a.click()
+  try {
+    const res = await axios.post('/edu/admin/users/export', {}, { responseType: 'blob' })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '用户列表.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    alert('导出失败：' + error.message)
+  }
 }
 
 const downloadTemplate = async () => {
-  const res = await axios.post('/edu/admin/users/importTemplate', {}, { responseType: 'blob' })
-  const url = URL.createObjectURL(res.data)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = '导入模板.xlsx'
-  a.click()
+  try {
+    const res = await axios.post('/edu/admin/users/importTemplate', {}, { responseType: 'blob' })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '导入模板.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    alert('下载模板失败：' + error.message)
+  }
 }
 
 const downloadGuide = async () => {
-  const res = await axios.get('/edu/admin/users/import/guideTxt', { responseType: 'blob' })
-  const url = URL.createObjectURL(res.data)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = '填写须知.txt'
-  a.click()
+  try {
+    const res = await axios.get('/edu/admin/users/import/guideTxt', { responseType: 'blob' })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '填写须知.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    alert('下载填写须知失败：' + error.message)
+  }
+}
+
+const handleFileUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // 验证文件格式
+  const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+  if (!validTypes.includes(file.type)) {
+    alert('请上传有效的 Excel 文件（.xlsx 或 .xls）')
+    event.target.value = ''
+    return
+  }
+
+  // 限制文件大小（例如 10MB）
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (file.size > maxSize) {
+    alert('文件大小超过 10MB，请选择更小的文件')
+    event.target.value = ''
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('updateSupport', 'true') // 根据后端接口，传递 updateSupport 参数
+
+  try {
+    const res = await axios.post('/edu/admin/users/importData', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    if (res.data.code === 200) {
+      alert('批量导入成功')
+      await fetchUsers() // 刷新用户列表
+    } else {
+      alert('导入失败：' + res.data.message)
+    }
+  } catch (error) {
+    alert('导入失败：' + error.message)
+  } finally {
+    event.target.value = '' // 清空文件输入框
+  }
 }
 
 const goToBook = () => router.push('/BookInfo')
@@ -337,5 +412,5 @@ tbody tr:hover {
 .modal-actions button[type="button"]:hover {
   background-color: #a6a9ad;
 }
-
 </style>
+```
