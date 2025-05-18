@@ -21,4 +21,17 @@ const router = createRouter({
     routes
 })
 
+// 路由守卫
+router.beforeEach((to, from, next) => {
+    const publicPages = ['/login']
+    const authRequired = !publicPages.includes(to.path)
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+
+    if (authRequired && (!userInfo || !userInfo.token)) {
+        return next('/login')
+    }
+
+    next()
+})
+
 export default router
