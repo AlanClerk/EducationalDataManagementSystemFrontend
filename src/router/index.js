@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/pages/login/Login.vue'
 import AdminDashboard from '@/pages/admin/AdminDashboard.vue'
+import BookInfo from '@/pages/admin/BookInfo.vue'
+import ClassInfo from '@/pages/admin/ClassInfo.vue'
 import StudentDashboard from '@/pages/student/StudentDashboard.vue'
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard.vue'
 import GuideDashboard from '@/pages/teacher/GuideDashboard.vue'
@@ -10,6 +12,8 @@ const routes = [
     { path: '/', redirect: '/login' },
     { path: '/login', component: Login },
     { path: '/adminDashboard', component: AdminDashboard },
+    { path: '/bookInfo', component: BookInfo },
+    { path: '/classInfo', component: ClassInfo },
     { path: '/studentDashboard', component: StudentDashboard },
     { path: '/teacherDashboard', component: TeacherDashboard },
     { path: '/guideDashboard', component: GuideDashboard },

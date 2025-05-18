@@ -1,0 +1,70 @@
+/* src/main.css */
+
+/* -------- 全局 Reset 和基础样式 -------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: 'Segoe UI', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f2f5f8;
+    color: #333;
+    height: 100%;
+}
+
+/* -------- 表单输入样式 -------- */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: border-color 0.3s ease;
+    font-size: 14px;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #3eaf7c;
+}
+
+/* -------- 按钮样式 -------- */
+button {
+    padding: 10px 20px;
+    background-color: #3eaf7c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #34986a;
+}
+
+/* -------- 容器样式 -------- */
+.container {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 40px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* -------- 标题样式 -------- */
+.title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #3eaf7c;
+}
