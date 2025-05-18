@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="admin-dashboard">
     <header>
@@ -413,4 +412,3 @@ tbody tr:hover {
   background-color: #a6a9ad;
 }
 </style>
-```
