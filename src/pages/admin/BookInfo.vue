@@ -207,7 +207,7 @@ const downloadTemplate = async () => {
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = '导入模板.xlsx'
+    a.download = '书籍信息导入模板.xlsx'
     a.click()
     URL.revokeObjectURL(url)
   } catch (error) {
@@ -221,11 +221,11 @@ const downloadGuide = async () => {
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = '填写须知.txt'
+    a.download = '书籍信息填写须知.txt'
     a.click()
     URL.revokeObjectURL(url)
   } catch (error) {
-    alert('下载填写须知失败：' + error.message)
+    alert('书籍信息下载填写须知失败：' + error.message)
   }
 }
 

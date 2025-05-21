@@ -1,29 +1,31 @@
 <template>
-  <div class="admin-dashboard">
+  <div class="class-info">
     <header>
-      <h1>用户管理</h1>
+      <h1>课程管理</h1>
       <div class="nav-buttons">
+        <button @click="goToAdmin">用户管理</button>
         <button @click="goToBook">图书管理</button>
-        <button @click="goToClass">课程管理</button>
       </div>
     </header>
 
     <div class="action-buttons">
-      <button @click="handleAdd">新增用户</button>
+      <button @click="handleAdd">新增课程</button>
       <button @click="downloadTemplate">下载模板</button>
       <button @click="downloadGuide">填写须知</button>
-      <button @click="exportUsers">导出用户列表</button>
+      <button @click="exportClasses">导出课程列表</button>
       <button @click="$refs.fileInput.click()">批量导入</button>
       <input type="file" ref="fileInput" style="display: none;" accept=".xlsx,.xls" @change="handleFileUpload" />
     </div>
 
     <!-- 搜索表单 -->
     <div class="search-form">
-      <label>学号/工号：<input v-model="search.uid" placeholder="请输入学号/工号" /></label>
-      <label>用户名：<input v-model="search.username" placeholder="请输入用户名" /></label>
-      <label>昵称：<input v-model="search.nickname" placeholder="请输入昵称" /></label>
+      <label>课程ID：<input v-model="search.classId" placeholder="请输入课程ID" /></label>
+      <label>课程名称：<input v-model="search.className" placeholder="请输入课程名称" /></label>
+      <label>开课学院：<input v-model="search.academy" placeholder="请输入开课学院" /></label>
+      <label>开课学期：<input v-model="search.semester" placeholder="请输入开课学期" /></label>
+      <label>教师姓名：<input v-model="search.teacherName" placeholder="请输入教师姓名" /></label>
       <div class="search-actions">
-        <button @click="searchUsers">搜索</button>
+        <button @click="searchClasses">搜索</button>
         <button @click="resetSearch">重置</button>
       </div>
     </div>
@@ -31,32 +33,32 @@
     <table>
       <thead>
       <tr>
-        <th>学号/工号</th>
-        <th>用户名</th>
-        <th>密码</th>
-        <th>昵称</th>
-        <th>电话</th>
-        <th>邮箱</th>
-        <th>角色</th>
-        <th>所属单位</th>
-        <th>备注</th>
+        <th>课程ID</th>
+        <th>课程名称</th>
+        <th>开课学院</th>
+        <th>上课时间</th>
+        <th>上课地点</th>
+        <th>教师姓名</th>
+        <th>考核方式</th>
+        <th>学期</th>
+        <th>课程类型</th>
         <th>操作</th>
       </tr>
       </thead>
       <tbody>
-      <tr v-for="user in filteredUsers" :key="user.id">
-        <td>{{ user.uid }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ user.password }}</td>
-        <td>{{ user.nickname }}</td>
-        <td>{{ user.phone }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.role }}</td>
-        <td>{{ user.department }}</td>
-        <td>{{ user.remark }}</td>
+      <tr v-for="classItem in filteredClasses" :fen="classItem.id">
+        <td>{{ classItem.classId }}</td>
+        <td>{{ classItem.className }}</td>
+        <td>{{ classItem.academy }}</td>
+        <td>{{ classItem.classTime }}</td>
+        <td>{{ classItem.classLocation }}</td>
+        <td>{{ classItem.teacherName }}</td>
+        <td>{{ classItem.assessmentType === 0 ? '考试' : '考查' }}</td>
+        <td>{{ classItem.semester }}</td>
+        <td>{{ classItem.classType }}</td>
         <td>
-          <button @click="handleEdit(user)">编辑</button>
-          <button @click="handleDelete(user.id)">删除</button>
+          <button @click="handleEdit(classItem)">编辑</button>
+          <button @click="handleDelete(classItem.id)">删除</button>
         </td>
       </tr>
       </tbody>
@@ -64,26 +66,30 @@
 
     <div v-if="dialogVisible" class="modal">
       <div class="modal-content">
-        <h3>{{ isEdit ? '编辑用户' : '新增用户' }}</h3>
+        <h3>{{ isEdit ? '编辑课程' : '新增课程' }}</h3>
         <form @submit.prevent="submitForm">
-          <label>学号/工号：<input v-model="form.uid" /></label>
-          <label>用户名：<input v-model="form.username" /></label>
-          <label>密码：<input v-model="form.password" /></label>
-          <label>昵称：<input v-model="form.nickname" /></label>
-          <label>电话：<input v-model="form.phone" /></label>
-          <label>邮箱：<input v-model="form.email" /></label>
-          <label>所属单位：<input v-model="form.department" /></label>
-          <label>角色：
-            <select v-model="form.role">
-              <option value="student">学生</option>
-              <option value="admin">管理员</option>
-              <option value="prof">教授</option>
-              <option value="assistant">助教</option>
-              <option value="guide">辅导员</option>
-              <option value="tutor">班主任</option>
+          <label>课程ID：<input v-model="form.classId" required /></label>
+          <label>课程名称：<input v-model="form.className" required /></label>
+          <label>开课学院：<input v-model="form.academy" required /></label>
+          <label>上课时间：<input v-model="form.classTime" required /></label>
+          <label>上课地点：<input v-model="form.classLocation" required /></label>
+          <label>教师ID：<input v-model="form.teacherId" required /></label>
+          <label>教师姓名：<input v-model="form.teacherName" required /></label>
+          <label>考核方式：
+            <select v-model="form.assessmentType" required>
+              <option :value="0">考试</option>
+              <option :value="1">考查</option>
             </select>
           </label>
-          <label>备注：<input v-model="form.remark" /></label>
+          <label>学期：<input v-model="form.semester" required /></label>
+          <label>课程描述：<input v-model="form.description" /></label>
+          <label>课程类型：
+            <select v-model="form.classType" required>
+              <option value="必修">必修</option>
+              <option value="选修">选修</option>
+              <option value="实验课">实验课</option>
+            </select>
+          </label>
           <div class="modal-actions">
             <button type="submit">提交</button>
             <button type="button" @click="dialogVisible = false">取消</button>
@@ -100,62 +106,81 @@ import axios from 'axios'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const userList = ref([])
+const classList = ref([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const form = ref({
-  id: null,
-  uid: '',
-  username: '',
-  password: '',
-  nickname: '',
-  remark: '',
-  phone: '',
-  email: '',
-  department: '',
-  role: ''
-})
-// 搜索条件
-const search = ref({
-  uid: '',
-  username: '',
-  nickname: ''
+  id: 0,
+  classId: '',
+  className: '',
+  academy: '',
+  classTime: '',
+  classLocation: '',
+  teacherId: '',
+  teacherName: '',
+  assessmentType: 0,
+  semester: '',
+  description: '',
+  classType: '必修'
 })
 
-// 计算属性：根据搜索条件过滤用户列表
-const filteredUsers = computed(() => {
-  return userList.value.filter(user => {
-    const uidMatch = search.value.uid
-        ? user.uid.toString().toLowerCase().includes(search.value.uid.toLowerCase())
+const search = ref({
+  classId: '',
+  className: '',
+  academy: '',
+  semester: '',
+  teacherName: ''
+})
+
+const filteredClasses = computed(() => {
+  return classList.value.filter(classItem => {
+    const classIdMatch = search.value.classId
+        ? classItem.classId.toLowerCase().includes(search.value.classId.toLowerCase())
         : true
-    const usernameMatch = search.value.username
-        ? user.username.toLowerCase().includes(search.value.username.toLowerCase())
+    const classNameMatch = search.value.className
+        ? classItem.className.toLowerCase().includes(search.value.className.toLowerCase())
         : true
-    const nicknameMatch = search.value.nickname
-        ? user.nickname.toLowerCase().includes(search.value.nickname.toLowerCase())
+    const academyMatch = search.value.academy
+        ? classItem.academy.toLowerCase().includes(search.value.academy.toLowerCase())
         : true
-    return uidMatch && usernameMatch && nicknameMatch
+    const semesterMatch = search.value.semester
+        ? classItem.semester.toLowerCase().includes(search.value.semester.toLowerCase())
+        : true
+    const teacherNameMatch = search.value.teacherName
+        ? classItem.teacherName.toLowerCase().includes(search.value.teacherName.toLowerCase())
+        : true
+    return classIdMatch && classNameMatch && academyMatch && semesterMatch && teacherNameMatch
   })
 })
 
-const fetchUsers = async () => {
+const fetchClasses = async () => {
   try {
-    const res = await axios.get('/edu/admin/users/list')
+    const res = await axios.get('/edu/admin/class/list')
     if (res.data.code === 200) {
-      userList.value = res.data.rows
+      classList.value = res.data.rows
     } else {
-      alert('获取用户列表失败：' + res.data.message)
+      alert('获取课程列表失败：' + res.data.msg)
     }
   } catch (error) {
-    alert('获取用户列表失败：' + error.message)
+    alert('获取课程列表失败：' + error.message)
   }
 }
 
 const handleAdd = () => {
   isEdit.value = false
   Object.assign(form.value, {
-    id: null, uid: '', username: '', password: '', nickname: '',
-    remark: '', phone: '', email: '', department: '', role: ''
+    id: 0,
+    classId: '',
+    className: '',
+    academy: '',
+    classTime: '',
+    classLocation: '',
+    teacherId: '',
+    teacherName: '',
+    assessmentType: 0,
+    semester: '',
+    description: '',
+    classType: '必修'
   })
   dialogVisible.value = true
 }
@@ -169,12 +194,12 @@ const handleEdit = (row) => {
 const submitForm = async () => {
   try {
     if (isEdit.value) {
-      await axios.put('/edu/admin/users', form.value)
+      await axios.put('/edu/admin/class', form.value)
     } else {
-      await axios.post('/edu/admin/users', form.value)
+      await axios.post('/edu/admin/class', form.value)
     }
     dialogVisible.value = false
-    await fetchUsers()
+    await fetchClasses()
     alert('操作成功')
   } catch (error) {
     alert('操作失败：' + error.message)
@@ -183,21 +208,21 @@ const submitForm = async () => {
 
 const handleDelete = async (id) => {
   try {
-    await axios.delete(`/edu/admin/users/${id}`)
-    await fetchUsers()
+    await axios.delete(`/edu/admin/class/${id}`)
+    await fetchClasses()
     alert('删除成功')
   } catch (error) {
     alert('删除失败：' + error.message)
   }
 }
 
-const exportUsers = async () => {
+const exportClasses = async () => {
   try {
-    const res = await axios.post('/edu/admin/users/export', {}, { responseType: 'blob' })
+    const res = await axios.post('/edu/admin/class/export', {}, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = '用户列表.xlsx'
+    a.download = '课程列表.xlsx'
     a.click()
     URL.revokeObjectURL(url)
   } catch (error) {
@@ -207,11 +232,11 @@ const exportUsers = async () => {
 
 const downloadTemplate = async () => {
   try {
-    const res = await axios.post('/edu/admin/users/importTemplate', {}, { responseType: 'blob' })
+    const res = await axios.post('/edu/admin/class/importTemplate', {}, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = '用户信息导入模板.xlsx'
+    a.download = '课程信息导入模板.xlsx'
     a.click()
     URL.revokeObjectURL(url)
   } catch (error) {
@@ -221,11 +246,11 @@ const downloadTemplate = async () => {
 
 const downloadGuide = async () => {
   try {
-    const res = await axios.get('/edu/admin/users/import/guideTxt', { responseType: 'blob' })
+    const res = await axios.get('/edu/admin/class/import/courseGuideTxt', { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = '用户信息填写须知.txt'
+    a.download = '课程信息填写须知.txt'
     a.click()
     URL.revokeObjectURL(url)
   } catch (error) {
@@ -244,26 +269,25 @@ const handleFileUpload = async (event) => {
     return
   }
 
-  const maxSize = 10 * 1024 * 1024 // 10MB
+  const maxSize = 100 * 1024 * 1024 // 10MB
   if (file.size > maxSize) {
-    alert('文件大小超过 10MB，请选择更小的文件')
+    alert('文件大小超过 100MB，请选择更小的文件')
     event.target.value = ''
     return
   }
 
   const formData = new FormData()
   formData.append('file', file)
-  formData.append('updateSupport', 'true')
 
   try {
-    const res = await axios.post('/edu/admin/users/importData', formData, {
+    const res = await axios.post('/edu/admin/class/importData', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     if (res.data.code === 200) {
       alert('批量导入成功')
-      await fetchUsers()
+      await fetchClasses()
     } else {
-      alert('导入失败：' + res.data.message)
+      alert('导入失败：' + res.data.msg)
     }
   } catch (error) {
     alert('导入失败：' + error.message)
@@ -272,26 +296,28 @@ const handleFileUpload = async (event) => {
   }
 }
 
-const searchUsers = () => {
+const searchClasses = () => {
   // 触发 computed 属性自动过滤，无需额外逻辑
 }
 
 const resetSearch = () => {
-  search.value.uid = ''
-  search.value.username = ''
-  search.value.nickname = ''
+  search.value.classId = ''
+  search.value.className = ''
+  search.value.academy = ''
+  search.value.semester = ''
+  search.value.teacherName = ''
 }
 
+const goToAdmin = () => router.push('/AdminDashboard')
 const goToBook = () => router.push('/BookInfo')
-const goToClass = () => router.push('/ClassInfo')
 
 onMounted(() => {
-  fetchUsers()
+  fetchClasses()
 })
 </script>
 
 <style scoped>
-.admin-dashboard {
+.class-info {
   padding: 24px;
   font-family: "Segoe UI", Roboto, sans-serif;
   background-color: #f5f7fa;
@@ -345,7 +371,6 @@ h1 {
   background-color: #85ce61;
 }
 
-/* 搜索表单样式 */
 .search-form {
   display: flex;
   gap: 16px;
@@ -439,8 +464,10 @@ tbody tr:hover {
 
 .modal {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
@@ -471,7 +498,8 @@ tbody tr:hover {
   color: #666;
 }
 
-.modal-content input, .modal-content select {
+.modal-content input,
+.modal-content select {
   margin-top: 4px;
   padding: 8px;
   border: 1px solid #dcdfe6;
@@ -480,7 +508,8 @@ tbody tr:hover {
   outline: none;
 }
 
-.modal-content input:focus, .modal-content select:focus {
+.modal-content input:focus,
+.modal-content select:focus {
   border-color: #409eff;
 }
 
