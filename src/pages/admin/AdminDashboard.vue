@@ -278,9 +278,9 @@ const handleFileUpload = async (event) => {
     return
   }
 
-  const maxSize = 10 * 1024 * 1024 // 10MB
+  const maxSize = 100 * 1024 * 1024 // 10MB
   if (file.size > maxSize) {
-    alert('文件大小超过 10MB，请选择更小的文件')
+    alert('文件大小超过 100MB，请选择更小的文件')
     event.target.value = ''
     return
   }
