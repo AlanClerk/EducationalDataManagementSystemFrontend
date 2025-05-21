@@ -29,7 +29,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const publicPages = ['/login']
     const authRequired = !publicPages.includes(to.path)
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+    const userInfo = JSON.parse(sessionStorage.getItem('userInfo'))
 
     if (authRequired && (!userInfo || !userInfo.token)) {
         return next('/login')

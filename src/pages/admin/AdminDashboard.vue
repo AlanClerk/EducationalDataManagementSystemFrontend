@@ -117,7 +117,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import request from '@/authorization/request';
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -172,7 +172,7 @@ const paginatedUsers = computed(() => {
 
 const fetchUsers = async () => {
   try {
-    const res = await axios.get('/edu/admin/users/list')
+    const res = await request.get('/edu/admin/users/list')
     if (res.data.code === 200) {
       userList.value = res.data.rows
       // 重置到第一页
@@ -203,9 +203,9 @@ const handleEdit = (row) => {
 const submitForm = async () => {
   try {
     if (isEdit.value) {
-      await axios.put('/edu/admin/users', form.value)
+      await request.put('/edu/admin/users', form.value)
     } else {
-      await axios.post('/edu/admin/users', form.value)
+      await request.post('/edu/admin/users', form.value)
     }
     dialogVisible.value = false
     await fetchUsers()
@@ -217,7 +217,7 @@ const submitForm = async () => {
 
 const handleDelete = async (id) => {
   try {
-    await axios.delete(`/edu/admin/users/${id}`)
+    await request.delete(`/edu/admin/users/${id}`)
     await fetchUsers()
     alert('删除成功')
   } catch (error) {
@@ -227,7 +227,7 @@ const handleDelete = async (id) => {
 
 const exportUsers = async () => {
   try {
-    const res = await axios.post('/edu/admin/users/export', {}, { responseType: 'blob' })
+    const res = await request.post('/edu/admin/users/export', {}, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -241,7 +241,7 @@ const exportUsers = async () => {
 
 const downloadTemplate = async () => {
   try {
-    const res = await axios.post('/edu/admin/users/importTemplate', {}, { responseType: 'blob' })
+    const res = await request.post('/edu/admin/users/importTemplate', {}, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -255,7 +255,7 @@ const downloadTemplate = async () => {
 
 const downloadGuide = async () => {
   try {
-    const res = await axios.get('/edu/admin/users/import/guideTxt', { responseType: 'blob' })
+    const res = await request.get('/edu/admin/users/import/guideTxt', { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -290,7 +290,7 @@ const handleFileUpload = async (event) => {
   formData.append('updateSupport', 'true')
 
   try {
-    const res = await axios.post('/edu/admin/users/importData', formData, {
+    const res = await request.post('/edu/admin/users/importData', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     if (res.data.code === 200) {

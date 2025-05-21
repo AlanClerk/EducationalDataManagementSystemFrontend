@@ -106,7 +106,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import request from '@/authorization/request';
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -162,7 +162,7 @@ const paginatedBooks = computed(() => {
 
 const fetchBooks = async () => {
   try {
-    const res = await axios.get('/edu/public/bookList')
+    const res = await request.get('/edu/public/bookList')
     if (res.data.code === 200) {
       bookList.value = res.data.rows
       currentPage.value = 1 // 重置到第一页
@@ -197,9 +197,9 @@ const handleEdit = (row) => {
 const submitForm = async () => {
   try {
     if (isEdit.value) {
-      await axios.put('/edu/books', form.value)
+      await request.put('/edu/books', form.value)
     } else {
-      await axios.post('/edu/books', form.value)
+      await request.post('/edu/books', form.value)
     }
     dialogVisible.value = false
     await fetchBooks()
@@ -211,7 +211,7 @@ const submitForm = async () => {
 
 const handleDelete = async (id) => {
   try {
-    await axios.delete(`/edu/books/${id}`)
+    await request.delete(`/edu/books/${id}`)
     await fetchBooks()
     alert('删除成功')
   } catch (error) {
@@ -221,7 +221,7 @@ const handleDelete = async (id) => {
 
 const exportBooks = async () => {
   try {
-    const res = await axios.post('/edu/books/export', {}, { responseType: 'blob' })
+    const res = await request.post('/edu/books/export', {}, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -235,7 +235,7 @@ const exportBooks = async () => {
 
 const downloadTemplate = async () => {
   try {
-    const res = await axios.post('/edu/books/importTemplate', {}, { responseType: 'blob' })
+    const res = await request.post('/edu/books/importTemplate', {}, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -249,7 +249,7 @@ const downloadTemplate = async () => {
 
 const downloadGuide = async () => {
   try {
-    const res = await axios.get('/edu/books/import/booksGuideTxt', { responseType: 'blob' })
+    const res = await request.get('/edu/books/import/booksGuideTxt', { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -284,7 +284,7 @@ const handleFileUpload = async (event) => {
   formData.append('updateSupport', 'true')
 
   try {
-    const res = await axios.post('/edu/books/importData', formData, {
+    const res = await request.post('/edu/books/importData', formData, {
       headers: {'Content-Type': 'multipart/form-data'}
     })
     if (res.data.code === 200) {

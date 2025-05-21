@@ -13,14 +13,14 @@ export const useUserStore = defineStore('user', {
     actions: {
         setUser(data) {
             Object.assign(this, data)
-            localStorage.setItem('userInfo', JSON.stringify(data))
+            sessionStorage.setItem('userInfo', JSON.stringify(data)) // 非永久存储
         },
         loadUser() {
-            const saved = JSON.parse(localStorage.getItem('userInfo'))
+            const saved = JSON.parse(sessionStorage.getItem('userInfo'))
             if (saved) Object.assign(this, saved)
         },
         logout() {
-            localStorage.removeItem('userInfo')
+            sessionStorage.removeItem('userInfo')
             this.$reset()
         }
     }

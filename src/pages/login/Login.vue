@@ -12,17 +12,46 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import {ref, onMounted} from 'vue'
 import axios from 'axios'
 import {useRouter} from 'vue-router'
 import {useUserStore} from '@/stores/user'
 
 const username = ref('')
 const password = ref('')
+const isLoading = ref(false)
 const router = useRouter()
 const userStore = useUserStore()
 
+// 组件挂载时恢复 sessionStorage 中的字段
+onMounted(() => {
+  const id = sessionStorage.getItem('id')
+  const uid = sessionStorage.getItem('uid')
+  const token = sessionStorage.getItem('token')
+  const role = sessionStorage.getItem('role')
+  const username = sessionStorage.getItem('username')
+  const name = sessionStorage.getItem('name')
+  const department = sessionStorage.getItem('department')
+  const nickname = sessionStorage.getItem('nickname')
+
+  if (id && uid && token && role && username) {
+    const userData = {
+      id,
+      uid,
+      token,
+      role,
+      username,
+      name: name || '',
+      department: department || '',
+      nickname: nickname || ''
+    }
+    userStore.setUser(userData)
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  }
+})
+
 const handleLogin = async () => {
+  isLoading.value = true
   try {
     const response = await axios.post('/edu/public/login', {
       username: username.value,
@@ -31,8 +60,24 @@ const handleLogin = async () => {
 
     const res = response.data
     if (res.code === 200) {
+      // 保存用户信息到 userStore 和 sessionStorage
       userStore.setUser(res.data)
-      axios.defaults.headers.common['Authorization'] = res.data.token
+      // 直接存储字段到 sessionStorage
+      sessionStorage.setItem('id', res.data.id)
+      sessionStorage.setItem('uid', res.data.uid)
+      sessionStorage.setItem('token', res.data.token)
+      sessionStorage.setItem('role', res.data.role)
+      sessionStorage.setItem('username', res.data.username)
+      if (res.data.name) {
+        sessionStorage.setItem('name', res.data.name)
+      }
+      if (res.data.department) {
+        sessionStorage.setItem('department', res.data.department)
+      }
+      if (res.data.nickname) {
+        sessionStorage.setItem('nickname', res.data.nickname)
+      }
+      axios.defaults.headers.common['Authorization'] = `${res.data.token}`
       alert('登录成功')
 
       const role = res.data.role
@@ -42,10 +87,11 @@ const handleLogin = async () => {
     }
   } catch (err) {
     alert('登录失败，请检查网络或稍后重试')
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
-
 <style scoped>
 .login-page {
   height: 100vh;
