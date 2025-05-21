@@ -4,7 +4,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard.vue'
 import BookInfo from '@/pages/admin/BookInfo.vue'
 import ClassInfo from '@/pages/admin/ClassInfo.vue'
 import StudentDashboard from '@/pages/student/StudentDashboard.vue'
-import TeacherDashboard from '@/pages/teacher/TeacherDashboard.vue'
+import ProfDashboard from '@/pages/teacher/ProfDashboard.vue'
 import GuideDashboard from '@/pages/teacher/GuideDashboard.vue'
 import TutorDashboard from '@/pages/teacher/TutorDashboard.vue'
 
@@ -15,7 +15,7 @@ const routes = [
     { path: '/bookInfo', component: BookInfo },
     { path: '/classInfo', component: ClassInfo },
     { path: '/studentDashboard', component: StudentDashboard },
-    { path: '/teacherDashboard', component: TeacherDashboard },
+    { path: '/ProfDashboard', component: ProfDashboard },
     { path: '/guideDashboard', component: GuideDashboard },
     { path: '/tutorDashboard', component: TutorDashboard },
 ]

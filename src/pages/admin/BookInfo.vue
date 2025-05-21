@@ -1,4 +1,3 @@
-
 <template>
   <div class="book-info">
     <header>
@@ -30,9 +29,22 @@
       </div>
     </div>
 
+    <!-- 每页显示条目数选择 -->
+    <div class="pagination-controls">
+      <label>每页显示：
+        <select v-model="pageSize" @change="changePageSize">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </label>
+      <span>共 {{ filteredBooks.length }} 条记录</span>
+    </div>
+
     <table>
       <thead>
       <tr>
+        <th>序号</th>
         <th>书名</th>
         <th>作者</th>
         <th>出版社</th>
@@ -43,7 +55,8 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="book in filteredBooks" :key="book.id">
+      <tr v-for="(book, index) in paginatedBooks" :key="book.id">
+        <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
         <td>{{ book.title }}</td>
         <td>{{ book.author }}</td>
         <td>{{ book.publisher }}</td>
@@ -57,6 +70,13 @@
       </tr>
       </tbody>
     </table>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+      <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+      <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+      <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+    </div>
 
     <div v-if="dialogVisible" class="modal">
       <div class="modal-content">
@@ -109,6 +129,10 @@ const search = ref({
   isbn: '',
   categoryCode: ''
 })
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = computed(() => Math.ceil(filteredBooks.value.length / pageSize.value))
 
 // 计算属性：根据搜索条件过滤图书列表
 const filteredBooks = computed(() => {
@@ -129,11 +153,19 @@ const filteredBooks = computed(() => {
   })
 })
 
+// 计算属性：分页后的图书列表
+const paginatedBooks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = Math.min(start + pageSize.value, filteredBooks.value.length)
+  return filteredBooks.value.slice(start, end)
+})
+
 const fetchBooks = async () => {
   try {
     const res = await axios.get('/edu/public/bookList')
     if (res.data.code === 200) {
       bookList.value = res.data.rows
+      currentPage.value = 1 // 重置到第一页
     } else {
       alert('获取图书列表失败：' + res.data.msg)
     }
@@ -253,7 +285,7 @@ const handleFileUpload = async (event) => {
 
   try {
     const res = await axios.post('/edu/books/importData', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: {'Content-Type': 'multipart/form-data'}
     })
     if (res.data.code === 200) {
       alert('批量导入成功')
@@ -269,7 +301,7 @@ const handleFileUpload = async (event) => {
 }
 
 const searchBooks = () => {
-  // 触发 computed 属性自动过滤，无需额外逻辑
+  currentPage.value = 1 // 搜索时重置到第一页
 }
 
 const resetSearch = () => {
@@ -277,6 +309,12 @@ const resetSearch = () => {
   search.value.author = ''
   search.value.isbn = ''
   search.value.categoryCode = ''
+  currentPage.value = 1 // 重置搜索时回到第一页
+}
+
+const changePageSize = () => {
+  currentPage.value = 1 // 更改每页条目数时重置到第一页
+  pageSize.value = Number(pageSize.value) // 确保 pageSize 是数字类型
 }
 
 const goToAdmin = () => router.push('/AdminDashboard')
@@ -431,6 +469,53 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background-color: #ecf5ff;
+}
+
+/* 分页控件样式 */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 8px;
+}
+
+.pagination-controls select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.pagination-controls select:focus {
+  border-color: #409eff;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  background-color: #409eff;
+  color: white;
+}
+
+.pagination button:disabled {
+  background-color: #dcdfe6;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #66b1ff;
 }
 
 .modal {

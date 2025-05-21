@@ -30,9 +30,22 @@
       </div>
     </div>
 
+    <!-- 每页显示条目数选择 -->
+    <div class="pagination-controls">
+      <label>每页显示：
+        <select v-model="pageSize" @change="changePageSize">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </label>
+      <span>共 {{ filteredClasses.length }} 条记录</span>
+    </div>
+
     <table>
       <thead>
       <tr>
+        <th>序号</th>
         <th>课程ID</th>
         <th>课程名称</th>
         <th>开课学院</th>
@@ -46,7 +59,8 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="classItem in filteredClasses" :fen="classItem.id">
+      <tr v-for="(classItem, index) in paginatedClasses" :key="classItem.id">
+        <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
         <td>{{ classItem.classId }}</td>
         <td>{{ classItem.className }}</td>
         <td>{{ classItem.academy }}</td>
@@ -63,6 +77,13 @@
       </tr>
       </tbody>
     </table>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+      <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+      <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+      <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+    </div>
 
     <div v-if="dialogVisible" class="modal">
       <div class="modal-content">
@@ -132,6 +153,11 @@ const search = ref({
   teacherName: ''
 })
 
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = computed(() => Math.ceil(filteredClasses.value.length / pageSize.value))
+
 const filteredClasses = computed(() => {
   return classList.value.filter(classItem => {
     const classIdMatch = search.value.classId
@@ -153,11 +179,19 @@ const filteredClasses = computed(() => {
   })
 })
 
+// 计算属性：分页后的课程列表
+const paginatedClasses = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = Math.min(start + pageSize.value, filteredClasses.value.length)
+  return filteredClasses.value.slice(start, end)
+})
+
 const fetchClasses = async () => {
   try {
     const res = await axios.get('/edu/admin/class/list')
     if (res.data.code === 200) {
       classList.value = res.data.rows
+      currentPage.value = 1 // 重置到第一页
     } else {
       alert('获取课程列表失败：' + res.data.msg)
     }
@@ -269,7 +303,7 @@ const handleFileUpload = async (event) => {
     return
   }
 
-  const maxSize = 100 * 1024 * 1024 // 10MB
+  const maxSize = 100 * 1024 * 1024 // 100MB
   if (file.size > maxSize) {
     alert('文件大小超过 100MB，请选择更小的文件')
     event.target.value = ''
@@ -297,7 +331,7 @@ const handleFileUpload = async (event) => {
 }
 
 const searchClasses = () => {
-  // 触发 computed 属性自动过滤，无需额外逻辑
+  currentPage.value = 1 // 搜索时重置到第一页
 }
 
 const resetSearch = () => {
@@ -306,6 +340,12 @@ const resetSearch = () => {
   search.value.academy = ''
   search.value.semester = ''
   search.value.teacherName = ''
+  currentPage.value = 1 // 重置搜索时回到第一页
+}
+
+const changePageSize = () => {
+  currentPage.value = 1 // 更改每页条目数时重置到第一页
+  pageSize.value = Number(pageSize.value) // 确保 pageSize 是数字类型
 }
 
 const goToAdmin = () => router.push('/AdminDashboard')
@@ -460,6 +500,53 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background-color: #ecf5ff;
+}
+
+/* 分页控件样式 */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 8px;
+}
+
+.pagination-controls select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.pagination-controls select:focus {
+  border-color: #409eff;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  background-color: #409eff;
+  color: white;
+}
+
+.pagination button:disabled {
+  background-color: #dcdfe6;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #66b1ff;
 }
 
 .modal {

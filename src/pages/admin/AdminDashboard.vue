@@ -28,9 +28,22 @@
       </div>
     </div>
 
+    <!-- 每页显示条目数选择 -->
+    <div class="pagination-controls">
+      <label>每页显示：
+        <select v-model="pageSize" @change="changePageSize">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </label>
+      <span>共 {{ filteredUsers.length }} 条记录</span>
+    </div>
+
     <table>
       <thead>
       <tr>
+        <th>序号</th>
         <th>学号/工号</th>
         <th>用户名</th>
         <th>密码</th>
@@ -44,7 +57,8 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="user in filteredUsers" :key="user.id">
+      <tr v-for="(user, index) in paginatedUsers" :key="user.id">
+        <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
         <td>{{ user.uid }}</td>
         <td>{{ user.username }}</td>
         <td>{{ user.password }}</td>
@@ -61,6 +75,13 @@
       </tr>
       </tbody>
     </table>
+
+    <!-- 分页导航 -->
+    <div class="pagination">
+      <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+      <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+      <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+    </div>
 
     <div v-if="dialogVisible" class="modal">
       <div class="modal-content">
@@ -121,6 +142,10 @@ const search = ref({
   username: '',
   nickname: ''
 })
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / pageSize.value))
 
 // 计算属性：根据搜索条件过滤用户列表
 const filteredUsers = computed(() => {
@@ -138,11 +163,20 @@ const filteredUsers = computed(() => {
   })
 })
 
+// 计算属性：分页后的用户列表
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = Math.min(start + pageSize.value, filteredUsers.value.length)
+  return filteredUsers.value.slice(start, end)
+})
+
 const fetchUsers = async () => {
   try {
     const res = await axios.get('/edu/admin/users/list')
     if (res.data.code === 200) {
       userList.value = res.data.rows
+      // 重置到第一页
+      currentPage.value = 1
     } else {
       alert('获取用户列表失败：' + res.data.message)
     }
@@ -273,13 +307,20 @@ const handleFileUpload = async (event) => {
 }
 
 const searchUsers = () => {
-  // 触发 computed 属性自动过滤，无需额外逻辑
+  currentPage.value = 1 // 搜索时重置到第一页
 }
 
 const resetSearch = () => {
   search.value.uid = ''
   search.value.username = ''
   search.value.nickname = ''
+  currentPage.value = 1 // 重置搜索时回到第一页
+}
+
+const changePageSize = () => {
+  currentPage.value = 1 // 更改每页条目数时重置到第一页
+  // 确保 pageSize 是数字类型
+  pageSize.value = Number(pageSize.value)
 }
 
 const goToBook = () => router.push('/BookInfo')
@@ -435,6 +476,53 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background-color: #ecf5ff;
+}
+
+/* 分页控件样式 */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 8px;
+}
+
+.pagination-controls select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.pagination-controls select:focus {
+  border-color: #409eff;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  background-color: #409eff;
+  color: white;
+}
+
+.pagination button:disabled {
+  background-color: #dcdfe6;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #66b1ff;
 }
 
 .modal {
