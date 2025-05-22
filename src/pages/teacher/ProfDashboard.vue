@@ -3,7 +3,7 @@
     <header class="header">
       <h2>你好，{{ nickname }}教授</h2>
       <div class="nav-buttons">
-        <button class="nav-btn" @click="goTo('StudentManaging')">学生管理</button>
+        <button class="nav-btn" @click="goTo('StudentManage')">学生管理</button>
         <button class="nav-btn" @click="goTo('GradeManage')">成绩管理</button>
         <button class="nav-btn" @click="goTo('BookBorrow')">书籍借阅</button>
         <button class="nav-btn" @click="goTo('FeedBack')">学生反馈</button>
@@ -283,7 +283,7 @@ onMounted(() => {
 }
 
 .nav-btn {
-  background-color: #3182ce;
+  background-color: #3b82f6; /* 更鲜艳的蓝色 */
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
@@ -293,7 +293,7 @@ onMounted(() => {
 }
 
 .nav-btn:hover {
-  background-color: #2b6cb0;
+  background-color: #2563eb; /* 更深的鲜艳蓝色 */
   transform: translateY(-1px);
 }
 
@@ -325,8 +325,8 @@ onMounted(() => {
 }
 
 .filter-bar select:focus {
-  border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  border-color: #3b82f6; /* 与导航按钮一致的蓝色 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
 }
 
@@ -385,7 +385,7 @@ onMounted(() => {
 }
 
 .add-btn {
-  background-color: #48bb78;
+  background-color: #22c55e; /* 更鲜艳的绿色 */
   color: white;
   padding: 6px 12px;
   border-radius: 6px;
@@ -395,7 +395,7 @@ onMounted(() => {
 }
 
 .add-btn:hover {
-  background-color: #38a169;
+  background-color: #16a34a; /* 更深的鲜艳绿色 */
   transform: translateY(-1px);
 }
 
@@ -444,7 +444,7 @@ onMounted(() => {
 }
 
 .edit-btn {
-  background-color: #ed8936;
+  background-color: #f59e0b; /* 更鲜艳的橙色 */
   color: white;
   padding: 5px 10px;
   border-radius: 4px;
@@ -454,11 +454,11 @@ onMounted(() => {
 }
 
 .edit-btn:hover {
-  background-color: #dd6b20;
+  background-color: #d97706; /* 更深的鲜艳橙色 */
 }
 
 .delete-btn {
-  background-color: #e53e3e;
+  background-color: #ef4444; /* 更鲜艳的红色 */
   color: white;
   padding: 5px 10px;
   border-radius: 4px;
@@ -468,7 +468,7 @@ onMounted(() => {
 }
 
 .delete-btn:hover {
-  background-color: #c53030;
+  background-color: #dc2626; /* 更深的鲜艳红色 */
 }
 
 .no-assistant {
@@ -529,8 +529,8 @@ onMounted(() => {
 }
 
 .form-group input:focus {
-  border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  border-color: #3b82f6; /* 与导航按钮一致的蓝色 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
 }
 
@@ -542,7 +542,7 @@ onMounted(() => {
 }
 
 .submit-btn {
-  background-color: #3182ce;
+  background-color: #3b82f6; /* 更鲜艳的蓝色 */
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
@@ -552,12 +552,12 @@ onMounted(() => {
 }
 
 .submit-btn:hover {
-  background-color: #2b6cb0;
+  background-color: #2563eb; /* 更深的鲜艳蓝色 */
   transform: translateY(-1px);
 }
 
 .cancel-btn {
-  background-color: #a0aec0;
+  background-color: #6b7280; /* 更鲜艳的灰色 */
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
@@ -567,7 +567,7 @@ onMounted(() => {
 }
 
 .cancel-btn:hover {
-  background-color: #718096;
+  background-color: #4b5563; /* 更深的灰色 */
   transform: translateY(-1px);
 }
 

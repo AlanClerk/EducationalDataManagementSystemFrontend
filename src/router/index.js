@@ -7,6 +7,10 @@ import StudentDashboard from '@/pages/student/StudentDashboard.vue'
 import ProfDashboard from '@/pages/teacher/ProfDashboard.vue'
 import GuideDashboard from '@/pages/teacher/GuideDashboard.vue'
 import TutorDashboard from '@/pages/teacher/TutorDashboard.vue'
+import GradeManage from "@/pages/teacher/GradeManage.vue";
+import BookBorrow from "@/pages/teacher/BookBorrow.vue";
+import FeedBack from "@/pages/teacher/FeedBack.vue";
+import StudentManage from "@/pages/teacher/StudentManage.vue";
 
 const routes = [
     { path: '/', redirect: '/login' },
@@ -18,6 +22,11 @@ const routes = [
     { path: '/ProfDashboard', component: ProfDashboard },
     { path: '/guideDashboard', component: GuideDashboard },
     { path: '/tutorDashboard', component: TutorDashboard },
+    { path: '/gradeManage', component: GradeManage },
+    { path: '/studentManage', component: StudentManage },
+    { path: '/bookBorrow', component: BookBorrow },
+    { path: '/feedback', component: FeedBack },
+
 ]
 
 const router = createRouter({
