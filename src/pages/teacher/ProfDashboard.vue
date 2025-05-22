@@ -3,10 +3,10 @@
     <header class="header">
       <h2>你好，{{ nickname }}教授</h2>
       <div class="nav-buttons">
-        <button class="nav-btn" @click="goTo('StudentManage')">学生管理</button>
-        <button class="nav-btn" @click="goTo('GradeManage')">成绩管理</button>
-        <button class="nav-btn" @click="goTo('BookBorrow')">书籍借阅</button>
-        <button class="nav-btn" @click="goTo('FeedBack')">学生反馈</button>
+        <button class="nav-btn" @click="goTo('/studentManage')">学生管理</button>
+        <button class="nav-btn" @click="goTo('/gradeManage')">成绩管理</button>
+        <button class="nav-btn" @click="goTo('/bookBorrow')">书籍借阅</button>
+        <button class="nav-btn" @click="goTo('/feedBack')">学生反馈</button>
       </div>
     </header>
 
@@ -241,8 +241,8 @@ const closeModal = () => {
   isEditMode.value = false
 }
 
-const goTo = (routeName) => {
-  router.push({name: routeName})
+const goTo = (routePath) => {
+  router.push(routePath)
 }
 
 onMounted(() => {
