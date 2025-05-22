@@ -252,176 +252,230 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  background-color: #f5f7fa;
-  padding: 20px;
-  font-family: "Segoe UI", Roboto, sans-serif;
+  background-color: #f7f9fc;
+  padding: 16px;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .header h2 {
-  font-size: 24px;
-  color: #333;
-  font-weight: bold;
+  font-size: 22px;
+  color: #2d3748;
+  font-weight: 600;
+  margin: 0;
 }
 
 .nav-buttons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .nav-btn {
-  background-color: #409eff;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.nav-btn:hover {
-  background-color: #66b1ff;
-}
-
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  color: #666;
-  font-size: 14px;
-}
-
-.filter-label {
-  width: 100px;
-  white-space: nowrap;
-}
-
-.filter-bar select {
-  width: 150px;
-  padding: 8px;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.filter-bar select:focus {
-  outline: none;
-  border-color: #409eff;
-}
-
-.course-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.course-card {
-  background-color: #fff;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 16px;
-}
-
-.course-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.course-basic h3 {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-}
-
-.course-basic p {
-  font-size: 14px;
-  color: #666;
-  margin: 4px 0;
-}
-
-.add-btn {
-  background-color: #67c23a;
+  background-color: #3182ce;
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  transition: 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.add-btn:hover {
-  background-color: #85ce61;
+.nav-btn:hover {
+  background-color: #2b6cb0;
+  transform: translateY(-1px);
 }
 
-.assistant-list {
-  margin-top: 12px;
+.filter-bar {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-radius: 6px;
+  flex-wrap: nowrap; /* 确保不换行 */
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.filter-bar select {
+  width: 120px; /* 缩短下拉框宽度 */
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-bar select:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+  outline: none;
+}
+
+.course-list {
+  display: grid;
   gap: 12px;
 }
 
-.assistant-item {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+.course-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  background-color: #f8fafc;
-  padding: 10px;
-  border-radius: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.course-basic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   font-size: 14px;
+  color: #2d3748;
+}
+
+.course-basic h3 {
+  font-size: 18px; /* 增大标题字体 */
+  color: #1a202c; /* 更深的颜色 */
+  margin: 0;
+  flex: 1 1 100%;
+  font-weight: 700;
+  background: linear-gradient(to right, #e6fffa, #ffffff); /* 背景渐变 */
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.course-basic p {
+  margin: 0;
+  flex: 0 1 auto;
+  padding: 4px 8px;
+  background: #e6fffa; /* 更亮的背景色 */
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.add-btn {
+  background-color: #48bb78;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-btn:hover {
+  background-color: #38a169;
+  transform: translateY(-1px);
+}
+
+.assistant-list {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.assistant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 按钮移到右侧 */
+  background-color: #f7fafc;
+  padding: 8px;
+  border-radius: 6px;
   border: 1px solid #e2e8f0;
-  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.assistant-item:hover {
+  background-color: #edf2f7;
 }
 
 .assistant-info {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 12px; /* 助教信息横向展示 */
+  align-items: center;
 }
 
 .assistant-name {
   font-weight: 500;
-  color: #333;
+  color: #2d3748;
+  font-size: 14px;
 }
 
-.assistant-id, .assistant-password {
-  color: #666;
+.assistant-id,
+.assistant-password {
+  color: #718096;
+  font-size: 13px;
 }
 
 .assistant-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .edit-btn {
-  background-color: #e6a23c;
+  background-color: #ed8936;
   color: white;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-btn:hover {
+  background-color: #dd6b20;
 }
 
 .delete-btn {
-  background-color: #f56c6c;
+  background-color: #e53e3e;
   color: white;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+  background-color: #c53030;
 }
 
 .no-assistant {
-  font-size: 14px;
-  color: #999;
+  font-size: 13px;
+  color: #718096;
+  text-align: center;
+  padding: 8px;
 }
 
 .modal-mask {
@@ -430,83 +484,143 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-container {
-  width: 520px;
-  background: #fff;
-  border-radius: 6px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-  padding: 24px;
+  width: 480px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  transform: scale(0.8);
+  animation: scaleIn 0.3s ease forwards;
 }
 
 .modal-container h3 {
   text-align: center;
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
+  font-size: 18px;
+  color: #2d3748;
   margin-bottom: 16px;
 }
 
+.form-group {
+  margin-bottom: 12px;
+}
+
 .form-group label {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 6px;
+  font-size: 13px;
+  color: #4a5568;
+  margin-bottom: 4px;
+  display: block;
 }
 
 .form-group input {
+  width: 100%;
   padding: 8px;
-  border: 1px solid #dcdfe6;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-size: 14px;
-  transition: 0.3s;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .form-group input:focus {
-  border-color: #409eff;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
   outline: none;
 }
 
 .modal-actions {
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .submit-btn {
-  background-color: #409eff;
+  background-color: #3182ce;
   color: white;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  transition: 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .submit-btn:hover {
-  background-color: #66b1ff;
+  background-color: #2b6cb0;
+  transform: translateY(-1px);
 }
 
 .cancel-btn {
-  background-color: #909399;
+  background-color: #a0aec0;
   color: white;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  transition: 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .cancel-btn:hover {
-  background-color: #a6a9ad;
+  background-color: #718096;
+  transform: translateY(-1px);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .course-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .course-basic {
+    flex-direction: column;
+  }
+
+  .assistant-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .modal-container {
+    width: 90%;
+  }
+
+  .filter-bar {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .filter-bar select {
+    width: 100px;
+  }
 }
 </style>
