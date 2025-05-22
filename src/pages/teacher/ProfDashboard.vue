@@ -1,16 +1,17 @@
 <template>
   <div class="dashboard">
     <header class="header">
-      <h2>课程管理</h2>
+      <h2>你好，{{ nickname }}教授</h2>
       <div class="nav-buttons">
         <button class="nav-btn" @click="goTo('StudentManaging')">学生管理</button>
         <button class="nav-btn" @click="goTo('GradeManage')">成绩管理</button>
         <button class="nav-btn" @click="goTo('BookBorrow')">书籍借阅</button>
+        <button class="nav-btn" @click="goTo('FeedBack')">学生反馈</button>
       </div>
     </header>
 
     <div class="filter-bar">
-      <label>筛选学期：</label>
+      <label class="filter-label">筛选学期：</label>
       <select v-model="selectedSemester">
         <option value="">全部</option>
         <option v-for="sem in allSemesters" :key="sem" :value="sem">{{ sem }}</option>
@@ -20,13 +21,20 @@
     <div class="course-list">
       <div
           v-for="course in filteredCourses"
-          :key="course.courseId"
+          :key="course.classId"
           class="course-card"
       >
         <div class="course-header">
           <div class="course-basic">
-            <h3>{{ course.courseName }}</h3>
-            <p>{{ course.semester }}</p>
+            <h3>{{ course.className }}</h3>
+            <p>课程号: {{ course.classId }}</p>
+            <p>学期: {{ course.semester }}</p>
+            <p>学院: {{ course.academy }}</p>
+            <p>上课时间: {{ course.classTime }}</p>
+            <p>上课地点: {{ course.classLocation }}</p>
+            <p>考核方式: {{ course.assessmentType === 0 ? '考试' : '考查' }}</p>
+            <p>课程类型: {{ course.classType }}</p>
+            <p>备注: {{ course.description }}</p>
           </div>
           <button class="add-btn" @click="openAddAssistantModal(course)">添加助教</button>
         </div>
@@ -36,17 +44,25 @@
               :key="assistant.assistantId"
               class="assistant-item"
           >
-            {{ assistant.assistantName }}（{{ assistant.assistantId }}）
+            <div class="assistant-info">
+              <span class="assistant-name">{{ assistant.assistantName }}</span>
+              <span class="assistant-id">工号: {{ assistant.assistantId }}</span>
+              <span class="assistant-password">密码: {{ assistant.assistantPassword }}</span>
+            </div>
+            <div class="assistant-actions">
+              <button class="edit-btn" @click="openEditAssistantModal(assistant, course)">编辑</button>
+              <button class="delete-btn" @click="deleteAssistant(assistant, course)">删除</button>
+            </div>
           </div>
           <div v-if="course.assistants.length === 0" class="no-assistant">暂无助教</div>
         </div>
       </div>
     </div>
 
-    <!-- 弹出添加助教模态 -->
+    <!-- 弹出添加/编辑助教模态框 -->
     <div class="modal-mask" v-if="showModal">
       <div class="modal-container">
-        <h3>添加助教</h3>
+        <h3>{{ isEditMode ? '编辑助教' : '添加助教' }}</h3>
         <div class="form-group">
           <label>助教工号</label>
           <input v-model="newAssistant.assistantId" type="text" />
@@ -57,10 +73,10 @@
         </div>
         <div class="form-group">
           <label>密码</label>
-          <input v-model="newAssistant.assistantPassword" type="password" />
+          <input v-model="newAssistant.assistantPassword" type="text" />
         </div>
         <div class="modal-actions">
-          <button class="submit-btn" @click="submitAssistant">提交</button>
+          <button class="submit-btn" @click="isEditMode ? editAssistant() : submitAssistant()">提交</button>
           <button class="cancel-btn" @click="closeModal">取消</button>
         </div>
       </div>
@@ -69,40 +85,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import request from '@/authorization/request';
 
-// 示例数据
-const courses = ref([
-  {
-    courseId: 1,
-    courseName: '计算机基础',
-    semester: '2024秋',
-    assistants: [
-      { assistantId: 1001, assistantName: '张三' }
-    ]
-  },
-  {
-    courseId: 2,
-    courseName: '数据结构',
-    semester: '2024秋',
-    assistants: []
-  }
-])
-
+const nickname = ref(sessionStorage.getItem('nickname') || '未知')
+const router = useRouter()
+const courses = ref([])
 const selectedSemester = ref('')
-const allSemesters = computed(() =>
-    [...new Set(courses.value.map((c) => c.semester))]
-)
-const filteredCourses = computed(() => {
-  return selectedSemester.value
-      ? courses.value.filter((c) => c.semester === selectedSemester.value)
-      : courses.value
-})
-
 const showModal = ref(false)
+const isEditMode = ref(false)
 const currentCourse = ref(null)
 const newAssistant = ref({
+  id: '',
   assistantId: '',
   assistantName: '',
   assistantPassword: '',
@@ -110,13 +105,132 @@ const newAssistant = ref({
   semester: ''
 })
 
+const allSemesters = computed(() => [...new Set(courses.value.map((c) => c.semester))])
+const filteredCourses = computed(() => {
+  return selectedSemester.value
+      ? courses.value.filter((c) => c.semester === selectedSemester.value)
+      : courses.value
+})
+
+// 获取课程列表
+const fetchCourses = async () => {
+  try {
+    const uid = sessionStorage.getItem('uid')
+    const response = await request.get('/edu/prof/queryCourses', { params: { uid } })
+    if (response.data.code === 200) {
+      courses.value = response.data.rows.map(course => ({
+        ...course,
+        assistants: []
+      }))
+      await fetchAssistantsForCourses()
+    }
+  } catch (error) {
+    console.error('获取课程失败:', error)
+  }
+}
+
+// 获取所有课程的助教信息
+const fetchAssistantsForCourses = async () => {
+  for (const course of courses.value) {
+    await fetchAssistants(course)
+  }
+}
+
+// 获取单个课程的助教
+const fetchAssistants = async (course) => {
+  try {
+    const response = await request.post('/edu/prof/queryAssistant', {
+      courseId: course.classId,
+      semester: course.semester
+    })
+    if (response.data.code === 200) {
+      course.assistants = response.data.rows
+    }
+  } catch (error) {
+    console.error(`获取课程${course.classId}助教失败:`, error)
+  }
+}
+
+// 添加助教
+const submitAssistant = async () => {
+  try {
+    const response = await request.post('/edu/prof/addAssistant', {
+      assistantId: newAssistant.value.assistantId,
+      assistantName: newAssistant.value.assistantName,
+      assistantPassword: newAssistant.value.assistantPassword,
+      courseId: newAssistant.value.courseId,
+      semester: newAssistant.value.semester
+    })
+    if (response.data.code === 200) {
+      await fetchAssistants(currentCourse.value)
+      closeModal()
+    }
+  } catch (error) {
+    console.error('添加助教失败:', error)
+  }
+}
+
+// 编辑助教
+const editAssistant = async () => {
+  try {
+    const response = await request.put('/edu/prof/editAssistant', {
+      id: newAssistant.value.id,
+      assistantId: newAssistant.value.assistantId,
+      assistantName: newAssistant.value.assistantName,
+      assistantPassword: newAssistant.value.assistantPassword,
+      courseId: newAssistant.value.courseId,
+      semester: newAssistant.value.semester
+    })
+    if (response.data.code === 200) {
+      await fetchAssistants(currentCourse.value)
+      closeModal()
+    }
+  } catch (error) {
+    console.error('编辑助教失败:', error)
+  }
+}
+
+// 删除助教
+const deleteAssistant = async (assistant, course) => {
+  try {
+    const response = await request.post('/edu/prof/deleteAssistant', {
+      id: assistant.id,
+      assistantId: assistant.assistantId,
+      assistantName: assistant.assistantName,
+      assistantPassword: assistant.assistantPassword,
+      courseId: course.classId,
+      semester: course.semester
+    })
+    if (response.data.code === 200) {
+      await fetchAssistants(course)
+    }
+  } catch (error) {
+    console.error('删除助教失败:', error)
+  }
+}
+
 const openAddAssistantModal = (course) => {
+  isEditMode.value = false
   currentCourse.value = course
   newAssistant.value = {
     assistantId: '',
     assistantName: '',
     assistantPassword: '',
-    courseId: course.courseId,
+    courseId: course.classId,
+    semester: course.semester
+  }
+  showModal.value = true
+}
+
+const openEditAssistantModal = (assistant, course) => {
+  isEditMode.value = true
+  currentCourse.value = course
+  newAssistant.value = {
+    id: assistant.id,
+    assistantId: assistant.assistantId,
+    assistantName: assistant.assistantName,
+    assistantPassword: assistant.assistantPassword,
+    courseId: course.classId,
     semester: course.semester
   }
   showModal.value = true
@@ -124,20 +238,16 @@ const openAddAssistantModal = (course) => {
 
 const closeModal = () => {
   showModal.value = false
+  isEditMode.value = false
 }
 
-const submitAssistant = () => {
-  currentCourse.value.assistants.push({
-    assistantId: newAssistant.value.assistantId,
-    assistantName: newAssistant.value.assistantName
-  })
-  closeModal()
-}
-
-const router = useRouter()
 const goTo = (routeName) => {
-  router.push({ name: routeName })
+  router.push({name: routeName})
 }
+
+onMounted(() => {
+  fetchCourses()
+})
 </script>
 
 <style scoped>
@@ -188,7 +298,13 @@ const goTo = (routeName) => {
   font-size: 14px;
 }
 
+.filter-label {
+  width: 100px;
+  white-space: nowrap;
+}
+
 .filter-bar select {
+  width: 150px;
   padding: 8px;
   border: 1px solid #dcdfe6;
   border-radius: 6px;
@@ -217,7 +333,7 @@ const goTo = (routeName) => {
 .course-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .course-basic h3 {
@@ -229,7 +345,7 @@ const goTo = (routeName) => {
 .course-basic p {
   font-size: 14px;
   color: #666;
-  margin: 4px 0 0;
+  margin: 4px 0;
 }
 
 .add-btn {
@@ -249,15 +365,58 @@ const goTo = (routeName) => {
 .assistant-list {
   margin-top: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .assistant-item {
-  background-color: #f2f6fc;
-  padding: 8px;
-  border-radius: 4px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: center;
+  background-color: #f8fafc;
+  padding: 10px;
+  border-radius: 6px;
   font-size: 14px;
+  border: 1px solid #e2e8f0;
+  width: 100%;
+}
+
+.assistant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assistant-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.assistant-id, .assistant-password {
+  color: #666;
+}
+
+.assistant-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-btn {
+  background-color: #e6a23c;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background-color: #f56c6c;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
 }
 
 .no-assistant {
@@ -265,7 +424,6 @@ const goTo = (routeName) => {
   color: #999;
 }
 
-/* 模态框样式 */
 .modal-mask {
   position: fixed;
   top: 0;
