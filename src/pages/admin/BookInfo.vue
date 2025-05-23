@@ -17,28 +17,43 @@
       <input type="file" ref="fileInput" style="display: none;" accept=".xlsx,.xls" @change="handleFileUpload" />
     </div>
 
-    <!-- 搜索表单 -->
-    <div class="search-form">
-      <label>书名：<input v-model="search.title" placeholder="请输入书名" /></label>
-      <label>作者：<input v-model="search.author" placeholder="请输入作者" /></label>
-      <label>ISBN：<input v-model="search.isbn" placeholder="请输入ISBN" /></label>
-      <label>分类号：<input v-model="search.categoryCode" placeholder="请输入分类号" /></label>
-      <div class="search-actions">
-        <button @click="searchBooks">搜索</button>
-        <button @click="resetSearch">重置</button>
+    <!-- 搜索表单和分页控件容器 -->
+    <div class="controls-row">
+      <!-- 搜索表单 -->
+      <div class="search-form">
+        <label>书名：<input v-model="search.title" placeholder="请输入书名" /></label>
+        <label>作者：<input v-model="search.author" placeholder="请输入作者" /></label>
+        <label>ISBN：<input v-model="search.isbn" placeholder="请输入ISBN" /></label>
+        <label>分类号：<input v-model="search.categoryCode" placeholder="请输入分类号" /></label>
+        <div class="search-actions">
+          <button @click="searchBooks">搜索</button>
+          <button @click="resetSearch">重置</button>
+        </div>
       </div>
-    </div>
 
-    <!-- 每页显示条目数选择 -->
-    <div class="pagination-controls">
-      <label>每页显示：
-        <select v-model="pageSize" @change="changePageSize">
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-        </select>
-      </label>
-      <span>共 {{ filteredBooks.length }} 条记录</span>
+      <!-- 分页控件和状态过滤 -->
+      <div class="right-controls">
+        <div class="pagination-controls">
+          <label>每页显示：
+            <select v-model="pageSize" @change="changePageSize">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <span>共 {{ filteredBooks.length }} 条记录</span>
+        </div>
+        <div class="status-filter">
+          <label>状态过滤：
+            <select v-model="search.status">
+              <option value="">全部</option>
+              <option value="空闲">空闲</option>
+              <option value="已借">已借</option>
+              <option value="逾期">逾期</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
 
     <table>
@@ -122,12 +137,13 @@ const form = ref({
   categoryCode: '',
   status: '空闲'
 })
-// 搜索条件
+// 搜索条件，添加状态过滤
 const search = ref({
   title: '',
   author: '',
   isbn: '',
-  categoryCode: ''
+  categoryCode: '',
+  status: ''
 })
 // 分页相关
 const currentPage = ref(1)
@@ -149,7 +165,10 @@ const filteredBooks = computed(() => {
     const categoryCodeMatch = search.value.categoryCode
         ? book.categoryCode.toLowerCase().includes(search.value.categoryCode.toLowerCase())
         : true
-    return titleMatch && authorMatch && isbnMatch && categoryCodeMatch
+    const statusMatch = search.value.status
+        ? book.status === search.value.status
+        : true
+    return titleMatch && authorMatch && isbnMatch && categoryCodeMatch && statusMatch
   })
 })
 
@@ -165,7 +184,7 @@ const fetchBooks = async () => {
     const res = await request.get('/edu/public/bookList')
     if (res.data.code === 200) {
       bookList.value = res.data.rows
-      currentPage.value = 1 // 重置到第一页
+      currentPage.value = 1
     } else {
       alert('获取图书列表失败：' + res.data.msg)
     }
@@ -272,7 +291,7 @@ const handleFileUpload = async (event) => {
     return
   }
 
-  const maxSize = 100 * 1024 * 1024 // 10MB
+  const maxSize = 100 * 1024 * 1024 // 100MB
   if (file.size > maxSize) {
     alert('文件大小超过 100MB，请选择更小的文件')
     event.target.value = ''
@@ -301,7 +320,7 @@ const handleFileUpload = async (event) => {
 }
 
 const searchBooks = () => {
-  currentPage.value = 1 // 搜索时重置到第一页
+  currentPage.value = 1
 }
 
 const resetSearch = () => {
@@ -309,12 +328,13 @@ const resetSearch = () => {
   search.value.author = ''
   search.value.isbn = ''
   search.value.categoryCode = ''
-  currentPage.value = 1 // 重置搜索时回到第一页
+  search.value.status = ''
+  currentPage.value = 1
 }
 
 const changePageSize = () => {
-  currentPage.value = 1 // 更改每页条目数时重置到第一页
-  pageSize.value = Number(pageSize.value) // 确保 pageSize 是数字类型
+  currentPage.value = 1
+  pageSize.value = Number(pageSize.value)
 }
 
 const goToAdmin = () => router.push('/AdminDashboard')
@@ -380,11 +400,25 @@ h1 {
   background-color: #85ce61;
 }
 
+/* 搜索表单和分页控件容器 */
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 搜索表单样式 */
 .search-form {
   display: flex;
   gap: 16px;
   align-items: flex-end;
-  margin-bottom: 16px;
   padding: 16px;
   background-color: #fff;
   border-radius: 6px;
@@ -443,6 +477,42 @@ h1 {
   background-color: #a6a9ad;
 }
 
+/* 分页控件样式 */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination-controls select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.pagination-controls select:focus {
+  border-color: #409eff;
+}
+
+/* 状态过滤下拉框样式 */
+.status-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-filter select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.status-filter select:focus {
+  border-color: #409eff;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -469,26 +539,6 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background-color: #ecf5ff;
-}
-
-/* 分页控件样式 */
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 8px;
-}
-
-.pagination-controls select {
-  padding: 8px;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.pagination-controls select:focus {
-  border-color: #409eff;
 }
 
 .pagination {

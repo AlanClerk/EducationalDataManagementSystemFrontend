@@ -17,29 +17,44 @@
       <input type="file" ref="fileInput" style="display: none;" accept=".xlsx,.xls" @change="handleFileUpload" />
     </div>
 
-    <!-- 搜索表单 -->
-    <div class="search-form">
-      <label>课程ID：<input v-model="search.classId" placeholder="请输入课程ID" /></label>
-      <label>课程名称：<input v-model="search.className" placeholder="请输入课程名称" /></label>
-      <label>开课学院：<input v-model="search.academy" placeholder="请输入开课学院" /></label>
-      <label>开课学期：<input v-model="search.semester" placeholder="请输入开课学期" /></label>
-      <label>教师姓名：<input v-model="search.teacherName" placeholder="请输入教师姓名" /></label>
-      <div class="search-actions">
-        <button @click="searchClasses">搜索</button>
-        <button @click="resetSearch">重置</button>
+    <!-- 搜索表单和分页控件容器 -->
+    <div class="controls-row">
+      <!-- 搜索表单 -->
+      <div class="search-form">
+        <label>课程ID：<input v-model="search.classId" placeholder="请输入课程ID" /></label>
+        <label>课程名称：<input v-model="search.className" placeholder="请输入课程名称" /></label>
+        <label>开课学院：<input v-model="search.academy" placeholder="请输入开课学院" /></label>
+        <label>开课学期：<input v-model="search.semester" placeholder="请输入开课学期" /></label>
+        <label>教师姓名：<input v-model="search.teacherName" placeholder="请输入教师姓名" /></label>
+        <div class="search-actions">
+          <button @click="searchClasses">搜索</button>
+          <button @click="resetSearch">重置</button>
+        </div>
       </div>
-    </div>
 
-    <!-- 每页显示条目数选择 -->
-    <div class="pagination-controls">
-      <label>每页显示：
-        <select v-model="pageSize" @change="changePageSize">
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-        </select>
-      </label>
-      <span>共 {{ filteredClasses.length }} 条记录</span>
+      <!-- 分页控件和课程类型过滤 -->
+      <div class="right-controls">
+        <div class="pagination-controls">
+          <label>每页显示：
+            <select v-model="pageSize" @change="changePageSize">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <span>共 {{ filteredClasses.length }} 条记录</span>
+        </div>
+        <div class="class-type-filter">
+          <label>课程类型过滤：
+            <select v-model="search.classType">
+              <option value="">全部</option>
+              <option value="必修">必修</option>
+              <option value="选修">选修</option>
+              <option value="实验课">实验课</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
 
     <table>
@@ -145,12 +160,14 @@ const form = ref({
   classType: '必修'
 })
 
+// 搜索条件，添加课程类型过滤
 const search = ref({
   classId: '',
   className: '',
   academy: '',
   semester: '',
-  teacherName: ''
+  teacherName: '',
+  classType: ''
 })
 
 // 分页相关
@@ -158,6 +175,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalPages = computed(() => Math.ceil(filteredClasses.value.length / pageSize.value))
 
+// 计算属性：根据搜索条件过滤课程列表
 const filteredClasses = computed(() => {
   return classList.value.filter(classItem => {
     const classIdMatch = search.value.classId
@@ -175,7 +193,10 @@ const filteredClasses = computed(() => {
     const teacherNameMatch = search.value.teacherName
         ? classItem.teacherName.toLowerCase().includes(search.value.teacherName.toLowerCase())
         : true
-    return classIdMatch && classNameMatch && academyMatch && semesterMatch && teacherNameMatch
+    const classTypeMatch = search.value.classType
+        ? classItem.classType === search.value.classType
+        : true
+    return classIdMatch && classNameMatch && academyMatch && semesterMatch && teacherNameMatch && classTypeMatch
   })
 })
 
@@ -191,7 +212,7 @@ const fetchClasses = async () => {
     const res = await request.get('/edu/admin/class/list')
     if (res.data.code === 200) {
       classList.value = res.data.rows
-      currentPage.value = 1 // 重置到第一页
+      currentPage.value = 1
     } else {
       alert('获取课程列表失败：' + res.data.msg)
     }
@@ -315,7 +336,7 @@ const handleFileUpload = async (event) => {
 
   try {
     const res = await request.post('/edu/admin/class/importData', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: {'Content-Type': 'multipart/form-data'}
     })
     if (res.data.code === 200) {
       alert('批量导入成功')
@@ -331,7 +352,7 @@ const handleFileUpload = async (event) => {
 }
 
 const searchClasses = () => {
-  currentPage.value = 1 // 搜索时重置到第一页
+  currentPage.value = 1
 }
 
 const resetSearch = () => {
@@ -340,12 +361,13 @@ const resetSearch = () => {
   search.value.academy = ''
   search.value.semester = ''
   search.value.teacherName = ''
-  currentPage.value = 1 // 重置搜索时回到第一页
+  search.value.classType = ''
+  currentPage.value = 1
 }
 
 const changePageSize = () => {
-  currentPage.value = 1 // 更改每页条目数时重置到第一页
-  pageSize.value = Number(pageSize.value) // 确保 pageSize 是数字类型
+  currentPage.value = 1
+  pageSize.value = Number(pageSize.value)
 }
 
 const goToAdmin = () => router.push('/AdminDashboard')
@@ -411,11 +433,25 @@ h1 {
   background-color: #85ce61;
 }
 
+/* 搜索表单和分页控件容器 */
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 搜索表单样式 */
 .search-form {
   display: flex;
   gap: 16px;
   align-items: flex-end;
-  margin-bottom: 16px;
   padding: 16px;
   background-color: #fff;
   border-radius: 6px;
@@ -474,6 +510,42 @@ h1 {
   background-color: #a6a9ad;
 }
 
+/* 分页控件样式 */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination-controls select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.pagination-controls select:focus {
+  border-color: #409eff;
+}
+
+/* 课程类型过滤下拉框样式 */
+.class-type-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.class-type-filter select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.class-type-filter select:focus {
+  border-color: #409eff;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -500,26 +572,6 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background-color: #ecf5ff;
-}
-
-/* 分页控件样式 */
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 8px;
-}
-
-.pagination-controls select {
-  padding: 8px;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.pagination-controls select:focus {
-  border-color: #409eff;
 }
 
 .pagination {

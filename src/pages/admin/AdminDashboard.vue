@@ -17,27 +17,45 @@
       <input type="file" ref="fileInput" style="display: none;" accept=".xlsx,.xls" @change="handleFileUpload" />
     </div>
 
-    <!-- 搜索表单 -->
-    <div class="search-form">
-      <label>学号/工号：<input v-model="search.uid" placeholder="请输入学号/工号" /></label>
-      <label>用户名：<input v-model="search.username" placeholder="请输入用户名" /></label>
-      <label>昵称：<input v-model="search.nickname" placeholder="请输入昵称" /></label>
-      <div class="search-actions">
-        <button @click="searchUsers">搜索</button>
-        <button @click="resetSearch">重置</button>
+    <!-- 搜索表单和分页控件容器 -->
+    <div class="controls-row">
+      <!-- 搜索表单 -->
+      <div class="search-form">
+        <label>学号/工号：<input v-model="search.uid" placeholder="请输入学号/工号" /></label>
+        <label>用户名：<input v-model="search.username" placeholder="请输入用户名" /></label>
+        <label>昵称：<input v-model="search.nickname" placeholder="请输入昵称" /></label>
+        <div class="search-actions">
+          <button @click="searchUsers">搜索</button>
+          <button @click="resetSearch">重置</button>
+        </div>
       </div>
-    </div>
 
-    <!-- 每页显示条目数选择 -->
-    <div class="pagination-controls">
-      <label>每页显示：
-        <select v-model="pageSize" @change="changePageSize">
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-        </select>
-      </label>
-      <span>共 {{ filteredUsers.length }} 条记录</span>
+      <!-- 分页控件和角色过滤 -->
+      <div class="right-controls">
+        <div class="pagination-controls">
+          <label>每页显示：
+            <select v-model="pageSize" @change="changePageSize">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <span>共 {{ filteredUsers.length }} 条记录</span>
+        </div>
+        <div class="role-filter">
+          <label>角色过滤：
+            <select v-model="search.role">
+              <option value="">全部</option>
+              <option value="student">学生</option>
+              <option value="admin">管理员</option>
+              <option value="prof">教授</option>
+              <option value="assistant">助教</option>
+              <option value="guide">辅导员</option>
+              <option value="tutor">班主任</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
 
     <table>
@@ -136,11 +154,12 @@ const form = ref({
   department: '',
   role: ''
 })
-// 搜索条件
+// 搜索条件，添加角色过滤
 const search = ref({
   uid: '',
   username: '',
-  nickname: ''
+  nickname: '',
+  role: ''
 })
 // 分页相关
 const currentPage = ref(1)
@@ -159,7 +178,10 @@ const filteredUsers = computed(() => {
     const nicknameMatch = search.value.nickname
         ? user.nickname.toLowerCase().includes(search.value.nickname.toLowerCase())
         : true
-    return uidMatch && usernameMatch && nicknameMatch
+    const roleMatch = search.value.role
+        ? user.role === search.value.role
+        : true
+    return uidMatch && usernameMatch && nicknameMatch && roleMatch
   })
 })
 
@@ -175,7 +197,6 @@ const fetchUsers = async () => {
     const res = await request.get('/edu/admin/users/list')
     if (res.data.code === 200) {
       userList.value = res.data.rows
-      // 重置到第一页
       currentPage.value = 1
     } else {
       alert('获取用户列表失败：' + res.data.message)
@@ -278,7 +299,7 @@ const handleFileUpload = async (event) => {
     return
   }
 
-  const maxSize = 100 * 1024 * 1024 // 10MB
+  const maxSize = 100 * 1024 * 1024 // 100MB
   if (file.size > maxSize) {
     alert('文件大小超过 100MB，请选择更小的文件')
     event.target.value = ''
@@ -314,12 +335,12 @@ const resetSearch = () => {
   search.value.uid = ''
   search.value.username = ''
   search.value.nickname = ''
-  currentPage.value = 1 // 重置搜索时回到第一页
+  search.value.role = ''
+  currentPage.value = 1
 }
 
 const changePageSize = () => {
-  currentPage.value = 1 // 更改每页条目数时重置到第一页
-  // 确保 pageSize 是数字类型
+  currentPage.value = 1
   pageSize.value = Number(pageSize.value)
 }
 
@@ -386,12 +407,25 @@ h1 {
   background-color: #85ce61;
 }
 
+/* 搜索表单和分页控件容器 */
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 /* 搜索表单样式 */
 .search-form {
   display: flex;
   gap: 16px;
   align-items: flex-end;
-  margin-bottom: 16px;
   padding: 16px;
   background-color: #fff;
   border-radius: 6px;
@@ -450,6 +484,42 @@ h1 {
   background-color: #a6a9ad;
 }
 
+/* 分页控件样式 */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination-controls select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.pagination-controls select:focus {
+  border-color: #409eff;
+}
+
+/* 角色过滤下拉框样式 */
+.role-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-filter select {
+  padding: 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.role-filter select:focus {
+  border-color: #409eff;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -476,26 +546,6 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background-color: #ecf5ff;
-}
-
-/* 分页控件样式 */
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 8px;
-}
-
-.pagination-controls select {
-  padding: 8px;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.pagination-controls select:focus {
-  border-color: #409eff;
 }
 
 .pagination {
@@ -527,8 +577,10 @@ tbody tr:hover {
 
 .modal {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
@@ -559,7 +611,8 @@ tbody tr:hover {
   color: #666;
 }
 
-.modal-content input, .modal-content select {
+.modal-content input,
+.modal-content select {
   margin-top: 4px;
   padding: 8px;
   border: 1px solid #dcdfe6;
@@ -568,7 +621,8 @@ tbody tr:hover {
   outline: none;
 }
 
-.modal-content input:focus, .modal-content select:focus {
+.modal-content input:focus,
+.modal-content select:focus {
   border-color: #409eff;
 }
 
