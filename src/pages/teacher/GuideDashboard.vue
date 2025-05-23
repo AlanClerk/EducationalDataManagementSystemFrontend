@@ -89,7 +89,7 @@ const nickname = ref(sessionStorage.getItem('nickname') || '用户')
 // 学生成绩数据
 const students = ref([])
 const currentPage = ref(1)
-const pageSize = ref(5) // 默认每页显示 5 条
+const pageSize = ref(10) // 默认每页显示 5 条
 const search = ref({
   studentId: '',
   studentName: ''
