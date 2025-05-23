@@ -11,6 +11,7 @@ import GradeManage from "@/pages/teacher/GradeManage.vue";
 import BookBorrow from "@/pages/teacher/BookBorrow.vue";
 import FeedBack from "@/pages/teacher/FeedBack.vue";
 import StudentManage from "@/pages/teacher/StudentManage.vue";
+import DetailGrade from "@/pages/teacher/DetailGrade.vue";
 
 const routes = [
     { path: '/', redirect: '/login' },
@@ -26,6 +27,7 @@ const routes = [
     { path: '/studentManage', component: StudentManage },
     { path: '/bookBorrow', component: BookBorrow },
     { path: '/feedback', component: FeedBack },
+    { path: '/detailGrade', component: DetailGrade },
 
 ]
 
