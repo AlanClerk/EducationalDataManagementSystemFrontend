@@ -12,6 +12,7 @@ import BookBorrow from "@/pages/teacher/BookBorrow.vue";
 import FeedBack from "@/pages/teacher/FeedBack.vue";
 import StudentManage from "@/pages/teacher/StudentManage.vue";
 import DetailGrade from "@/pages/teacher/DetailGrade.vue";
+import AssistantDashboard from "@/pages/teacher/AssistantDashboard.vue";
 
 const routes = [
     { path: '/', redirect: '/login' },
@@ -28,6 +29,7 @@ const routes = [
     { path: '/bookBorrow', component: BookBorrow },
     { path: '/feedback', component: FeedBack },
     { path: '/detailGrade', component: DetailGrade },
+    { path: '/assistantDashboard', component: AssistantDashboard },
 
 ]
 
