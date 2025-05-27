@@ -118,6 +118,7 @@ import request from '@/authorization/request'
 
 const router = useRouter()
 const students = ref([])
+const courses = ref([]) // 新增 courses 用于存储课程数据
 const selectedSemester = ref('')
 const selectedCourseId = ref('')
 const dialogVisible = ref(false)
@@ -133,21 +134,24 @@ const form = ref({
   semester: ''
 })
 
-const allSemesters = ref([])
+const allSemesters = computed(() => {
+  return [...new Set(courses.value.map(c => c.semester))].sort((a, b) => b.localeCompare(a))
+})
+
 const filteredStudents = ref([])
 
 const filteredCourseIds = computed(() => {
   if (!selectedSemester.value) return []
-  return [...new Set(students.value
-      .filter(s => s.semester === selectedSemester.value)
-      .map(s => s.courseId))]
+  return courses.value
+      .filter(c => c.semester === selectedSemester.value)
+      .map(c => c.courseId)
 })
 
 const filteredFormCourseIds = computed(() => {
   if (!form.value.semester) return []
-  return [...new Set(students.value
-      .filter(s => s.semester === form.value.semester)
-      .map(s => s.courseId))]
+  return courses.value
+      .filter(c => c.semester === form.value.semester)
+      .map(c => c.courseId)
 })
 
 const paginatedStudents = computed(() => {
@@ -157,6 +161,25 @@ const paginatedStudents = computed(() => {
 })
 
 const totalPages = computed(() => Math.ceil(filteredStudents.value.length / pageSize.value))
+
+// 新增 fetchCourses 函数，从 /edu/prof/queryCourses 获取课程数据
+const fetchCourses = async () => {
+  try {
+    const uid = sessionStorage.getItem('uid')
+    const res = await request.get('/edu/prof/queryCourses', { params: { uid } })
+    if (res.data.code === 200) {
+      courses.value = res.data.rows.map(course => ({
+        ...course,
+        courseId: String(course.classId), // 统一为字符串
+        courseName: course.courseName || course.classId
+      }))
+    } else {
+      alert(`获取课程列表失败：${res.data.msg}`)
+    }
+  } catch (error) {
+    alert(`获取课程列表失败：${error.message}`)
+  }
+}
 
 const fetchStudents = async () => {
   try {
@@ -168,8 +191,6 @@ const fetchStudents = async () => {
     if (res.data.code === 200) {
       students.value = res.data.rows
       filteredStudents.value = res.data.rows
-      allSemesters.value = [...new Set(res.data.rows.map(s => s.semester))].sort((a, b) => b.localeCompare(a))
-      // 移除默认选择逻辑，确保初始加载不自动选择
     } else {
       alert('获取学生列表失败：' + res.data.msg)
     }
@@ -223,8 +244,9 @@ const handleEdit = (student) => {
 
 const submitForm = async () => {
   try {
-    const isValidCombination = students.value.some(
-        s => s.semester === form.value.semester && s.courseId === form.value.courseId
+    // 校验学期和课程号组合是否有效
+    const isValidCombination = courses.value.some(
+        c => c.semester === form.value.semester && c.courseId === form.value.courseId
     )
     if (!isValidCombination) {
       alert('所选学期和课程号的组合无效，请重新选择')
@@ -350,8 +372,9 @@ const goTo = (routePath) => {
   router.push(routePath)
 }
 
-onMounted(() => {
-  fetchStudents()
+onMounted(async () => {
+  await fetchCourses() // 先获取课程数据
+  await fetchStudents() // 再获取学生数据
 })
 </script>
 

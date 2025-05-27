@@ -193,12 +193,22 @@ const fetchCourses = async () => {
   isLoading.value = true
   try {
     const assistantId = sessionStorage.getItem('uid')
-    const res = await request.get('/edu/classAssistant/list', { params: { assistant_id: assistantId } })
+    if (!assistantId) {
+      alert('未找到用户ID，请重新登录')
+      router.push('/login') // 假设有登录页面
+      return
+    }
+    const res = await request.get('/edu/classAssistant/list', {
+      params: {
+        assistantId: assistantId // 使用 assistantId 作为参数名
+      }
+    })
     if (res.data.code === 200) {
       courses.value = res.data.rows.map(course => ({
         courseId: String(course.courseId),
         semester: course.semester,
-        assistantName: course.assistantName
+        assistantName: course.assistantName,
+        className: course.className // 确保className被正确映射
       }))
       // 设置助教名称（假设所有记录的assistantName一致，取第一个）
       if (courses.value.length > 0) {
@@ -338,7 +348,7 @@ const downloadTemplate = async () => {
       courseId: selectedCourseId.value,
       semester: selectedSemester.value,
       weight: weight.value
-    }, {responseType: 'blob'})
+    }, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -381,7 +391,7 @@ const exportGrades = async () => {
     const res = await request.post('/edu/grade/export', {
       courseId: selectedCourseId.value,
       semester: selectedSemester.value
-    }, {responseType: 'blob'})
+    }, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
